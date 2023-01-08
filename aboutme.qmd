@@ -11,7 +11,7 @@ Hi everyone! My name is Katie Wells and I am a first year MPH student in the Epi
 
 ### **Here's a picture of me!**
 
-![If you see me on campus say hey!](IMG_0785.JPG)
+![If you see me on campus say hey!](IMG_0785.JPG){width="5in"}
 
 ### **Something I find cool**
 
