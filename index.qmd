@@ -1,16 +1,16 @@
 ---
-title: "My website and data analysis portfolio"
+title: "MADA website and data analysis portfolio"
 output: 
   html_document:
     toc: FALSE
 ---
 
-# Hello
+# Hey y'all!
 
-### And hello again
+### :)
 
 Welcome to **my website** and _data analysis portfolio._ 
 
 
 * Please use the `Menu Bar` above to look around.
-* Have fun!
+* Have fun and GO DAWGS!

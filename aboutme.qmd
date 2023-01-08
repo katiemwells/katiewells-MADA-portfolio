@@ -5,4 +5,16 @@ output:
       toc: FALSE
 ---
 
-Add some text and a figure describing myself.
+### **A little about me**
+
+Hi everyone! My name is Katie Wells and I am a first year MPH student in the Epi concentration. I went to UGA for undergrad and majored in genetics; I also completed 2 years of undergraduate research in pertussis under Dr. Eric Harvill. I would love to study infectious disease epi and do more research in this field. I used R in undergrad in one course, and I just completed EPID 7500. I feel like there is always more to learn and understand in R no matter your skill level. I want to use this course to get more comfortable in programming and coding as I feel it is an integral part to almost every public health career. Something fun about me: I've had three hand surgeries in the past year all over a can of tomatoes (buy a decent can opener, everyone).
+
+### **Here's a picture of me!**
+
+![If you see me on campus say hey!](IMG_0785.JPG)
+
+### **Something I find cool**
+
+[Artificial Intelligence for infectious disease Big Data Analytics - ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2468045118301445)
+
+I mentioned earlier that I am interested in infectious disease research; here's an article I found about how AI can be used to increase accuracy in diagnosis, suggest treatments, and improve public health outcomes.

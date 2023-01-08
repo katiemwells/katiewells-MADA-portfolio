@@ -18,7 +18,7 @@ website:
             href: ./tidytuesday_exercise.html
     right:
       - icon: github 
-        href: URL-TO-THIS-REPOSITORY-HERE        
+        href: https://github.com/katiemwells/katiewells-MADA-portfolio       
 
 format:
   html:
