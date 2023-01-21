@@ -140,7 +140,30 @@ ul.task-list li input[type="checkbox"] {
 
 </header>
 
-<p>Placeholder file for the future R coding exercise.</p>
+<p>#install dslabs package install.packages(“dslabs”) install.packages(“ggplot2”)</p>
+<p>#load dslabs package library(“dslabs”) library(“tidyverse”) library(“ggplot2”)</p>
+<p>#look at help file for gapminder data help(gapminder)</p>
+<p>#get an overview of data structure str(gapminder)</p>
+<p>#get a summary of data summary(gapminder)</p>
+<p>#determine the type of object gapminder is class(gapminder)</p>
+<p>#assign African coutnries to their own dataset africadata &lt;- gapminder %&gt;% filter(continent == “Africa”)</p>
+<p>#get an overview of africadata str(africadata)</p>
+<p>#get a summary of africadata summary(africadata)</p>
+<p>#assign African countries’ infant mortality and life expectancy data to #its own object africa_il &lt;- africadata[ , c(“infant_mortality”,“life_expectancy”)]</p>
+<p>#assign African countries’ life expectancy and population data to its #own object africa_lp &lt;- africadata[ , c(“life_expectancy”,“population”)]</p>
+<p>#get an overview of africa_il and africa_lp str(africa_il) str(africa_lp)</p>
+<p>#get a summary of africa_il and africa_lp summary(africa_il) summary(africa_lp)</p>
+<p>#plot life expectancy as a function of infant mortality ggplot(africa_il, aes(x=infant_mortality, y=life_expectancy)) + geom_point() #from the plot there appears to be a negative correlation between the two variables</p>
+<p>#plot life expectancy as a function of population size ggplot(africa_lp,aes(x=population, y=life_expectancy)) + geom_point() + scale_x_continuous(trans=“log10”) #from the plot there appears to be a #positive correlation between the two variables #the “streaks” of data #seem to come from the number of years avaiable for each country</p>
+<p>#find na values in infant_mortality subset(africadata,is.na(infant_mortality)) #there is missing infant_mortality data up #until 1981 and again in 2016, so we should choose a year like 2000 to #avoid any NAs</p>
+<p>#make a dataset only including data from 2000 africadata_2000 &lt;-africadata %&gt;% filter(year == “2000”)</p>
+<p>#get overview and summary of africadata_2000 str(africadata_2000) summary(africadata_2000)</p>
+<p>#plot life expectancy as a function of infant mortality with 2000 data ggplot(africadata_2000, aes(x=infant_mortality, y=life_expectancy)) + geom_point() #from the plot there seems to be a negative correlation #between the two variables</p>
+<p>#plot life expectancy as a function of population size with 2000 data ggplot(africadata_2000, aes(x=population, y=life_expectancy)) + geom_point() + scale_x_continuous(trans=“log10”) #from the plot there #is no clear correlation for the two variables in this dataset</p>
+<p>#fit 2000 data to a linear model with life_expectancy as the outcome and #infant_mortality as the predictor fit1 &lt;- lm(life_expectancy ~ infant_mortality, data=africadata_2000)</p>
+<p>#get a summary of fit1 summary(fit1) #the p-value of 2.83e-08 show that #there is a significant correlation between life expectancy and infant #mortality in the 2000 dataset</p>
+<p>#fit 2000 data to a linear model with life_expectancy as the outcome and #population as the predictor fit2 &lt;- lm(life_expectancy ~ population, data=africadata_2000)</p>
+<p>#get a summary of fit2 summary(fit2) #the p-vlaue of 0.616 shows there #is not a significant correlation between life expectancy and population #in the 2000 dataset</p>
 
 
 
