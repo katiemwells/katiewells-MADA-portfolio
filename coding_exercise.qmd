@@ -175,3 +175,73 @@ summary(fit2)
 #the p-vlaue of 0.616 shows there
 #is not a significant correlation between life expectancy and population
 #in the 2000 dataset
+
+
+# From this line, down is work from Connor Ross :) 
+
+```{r}
+## install.package('broom') was previously done
+
+## Load package 'broom'
+library(broom)
+
+```
+
+
+
+## Fitting GDP against Infant Mortality and Population in a Linear Model
+
+```{r}
+## Feeling a little curious so I made some graphs...
+
+### Wonder what effects GDP on IM looks like...
+
+ggplot2::ggplot(data = africadata_2000, mapping = aes(x = log(gdp),
+                                                      y = log(infant_mortality))) +
+  geom_point() + labs(x = "Log GDP", y = "Log Infant Mortality", 
+                      title = "Effects of GDP on Infant Mortality in 2000")
+
+
+### Cool, cool. Now what if I do this with population...
+ggplot2::ggplot(data = africadata_2000, mapping = aes(x = log(gdp),
+                                                      y = log(population))) +
+  geom_point() + labs(x = "Log GDP", y = "Log Population", 
+                      title = "Effects of GDP on Population in 2000")
+#### ^^ NICEEEEE!
+
+
+## Fitting GDP against Infant Mortality
+fit3 <- lm(gdp ~ infant_mortality, data = africadata_2000)
+
+### Fit3 results
+tidy(fit3)
+
+
+## Fitting GDP against Population
+fit4 <- lm(gdp ~ population, data=africadata_2000)
+
+### Fit 4 results
+tidy(fit4)
+
+
+```
+
+Fit 3 model suggests that there may be a negative association between GDP and 
+Infant Mortality. Since the p-value is less than our alpha of 0.05 (p < 0.02),
+we find these results to be significant. Fit 3 model suggest that there may be 
+a positive association between GDP and population. Since the p-value is less
+than our alpha of 0.05 (p < 0.001), we can reject the null hypothesis
+(no association).
+
+
+
+
+
+
+
+
+
+
+
+
+
