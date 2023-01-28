@@ -1,0 +1,54 @@
+This data was obtained from data.cdc.gov and contains data from 2/24/2022 to 1/26/2023. This dataset contains the same values used to display information available on the COVID Data Tracker, and is updated weekly. The CDC combines three metrics (new COVID-19 admissions per 100,000 population in the past 7 days, the percent of staffed inpatient beds occupied by COVID-19 patients, and total new COVID-19 cases per 100,000 population in the past 7 days) to determine the COVID-19 community level and classify it as low, medium, or high. This community level can help people and communities make decisions based on their circumstances and individual needs. It has a total of 12 columns and 158,000 rows including all available county data. 
+
+```{r}
+#load needed packages
+library("tidyverse")
+library("readr")
+library("dplyr")
+```
+
+
+```{r}
+#load data
+community <-read_csv("dataanalysis-exercise/rawdata/United_States_COVID-19_Community_Levels_by_County.csv")
+```
+
+
+```{r}
+#cleaning community data
+community <- community %>% select(county, state, county_population, health_service_area_population, covid_inpatient_bed_utilization, covid_hospital_admissions_per_100k, covid_cases_per_100k, `covid-19_community_level`, date_updated)
+```
+
+I decided to keep the "date_updated" variable as there will be multiple observations for each county.
+
+I decided I needed to reduce the number of observations to make this data a little easier to use; I decided to filter by Georgia to bring this number down as well as give me some relatable data. 
+
+```{r}
+#take observations just from Georgia 
+community <- community %>% filter(state == "Georgia")
+```
+
+```{r}
+#alphabetize by county to make easier to see trends in table
+community<- community[order(community$county), ]
+```
+
+This is still a lot of observations, so I decided to filter to approximately a six-month period (07-28-2022 - 01-26-2023)
+
+```{r}
+#filter by desired date range
+community <- community %>% filter(between(date_updated, as.Date('2022-07-28'), as.Date('2023-01-26')))
+```
+
+I think it would be interesting to use this data analyze the number of COVID cases per 100k in relation to bed utilization and hospital admissions, as well as the number of cases per 100k over time to observe trends in infection. I don;t know the best way to incorporate it, but a graph (boxplot maybe?) including the community leel would also be cool to see. These analyses could tell us something about COVID 19 case trends in Georgia during these last 6 months; as the pandemic draws on after almost 3 year it would be interesting to see what level of community severity still exists. 
+
+```{r}
+# save data to RDS file
+saveRDS(community, file = "community.rds")
+```
+
+```{r}
+resulttable=readRDS("community.rds")
+knitr::kable(resulttable)
+```
+
