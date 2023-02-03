@@ -46,8 +46,7 @@ saveRDS(community, file = "community.rds")
 ```
 
 ```{r}
-resulttable=readRDS("community.rds")
-knitr::kable(resulttable)
+summary(community)
 ```
 
 # Section II
