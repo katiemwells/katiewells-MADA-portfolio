@@ -1,4 +1,4 @@
-This data was obtained from data.cdc.gov and contains data from 2/24/2022 to 1/26/2023. This dataset contains the same values used to display information available on the COVID Data Tracker, and is updated weekly. The CDC combines three metrics (new COVID-19 admissions per 100,000 population in the past 7 days, the percent of staffed inpatient beds occupied by COVID-19 patients, and total new COVID-19 cases per 100,000 population in the past 7 days) to determine the COVID-19 community level and classify it as low, medium, or high. This community level can help people and communities make decisions based on their circumstances and individual needs. It has a total of 12 columns and 158,000 rows including all available county data. 
+This data was obtained from data.cdc.gov and contains data from 2/24/2022 to 1/26/2023. This dataset contains the same values used to display information available on the COVID Data Tracker, and is updated weekly. The CDC combines three metrics (new COVID-19 admissions per 100,000 population in the past 7 days, the percent of staffed inpatient beds occupied by COVID-19 patients, and total new COVID-19 cases per 100,000 population in the past 7 days) to determine the COVID-19 community level and classify it as low, medium, or high. This community level can help people and communities make decisions based on their circumstances and individual needs. It has a total of 12 columns and 158,000 rows including all available county data.
 
 ```{r}
 #load needed packages
@@ -7,12 +7,10 @@ library("readr")
 library("dplyr")
 ```
 
-
 ```{r}
 #load data
 community <-read_csv("dataanalysis-exercise/rawdata/United_States_COVID-19_Community_Levels_by_County.csv")
 ```
-
 
 ```{r}
 #cleaning community data
@@ -21,7 +19,7 @@ community <- community %>% select(county, state, county_population, health_servi
 
 I decided to keep the "date_updated" variable as there will be multiple observations for each county.
 
-I decided I needed to reduce the number of observations to make this data a little easier to use; I decided to filter by Georgia to bring this number down as well as give me some relatable data. 
+I decided I needed to reduce the number of observations to make this data a little easier to use; I decided to filter by Georgia to bring this number down as well as give me some relatable data.
 
 ```{r}
 #take observations just from Georgia 
@@ -40,7 +38,7 @@ This is still a lot of observations, so I decided to filter to approximately a s
 community <- community %>% filter(between(date_updated, as.Date('2022-07-28'), as.Date('2023-01-26')))
 ```
 
-I think it would be interesting to use this data analyze the number of COVID cases per 100k in relation to bed utilization and hospital admissions, as well as the number of cases per 100k over time to observe trends in infection. I don;t know the best way to incorporate it, but a graph (boxplot maybe?) including the community leel would also be cool to see. These analyses could tell us something about COVID 19 case trends in Georgia during these last 6 months; as the pandemic draws on after almost 3 year it would be interesting to see what level of community severity still exists. 
+I think it would be interesting to use this data analyze the number of COVID cases per 100k in relation to bed utilization and hospital admissions, as well as the number of cases per 100k over time to observe trends in infection. I don;t know the best way to incorporate it, but a graph (boxplot maybe?) including the community leel would also be cool to see. These analyses could tell us something about COVID 19 case trends in Georgia during these last 6 months; as the pandemic draws on after almost 3 year it would be interesting to see what level of community severity still exists.
 
 ```{r}
 # save data to RDS file
@@ -52,3 +50,29 @@ resulttable=readRDS("community.rds")
 knitr::kable(resulttable)
 ```
 
+# Section II
+
+This section was added by Kailin (Kai) Chen.
+
+## Load Cleaned Data and Load Necessary Libraries
+```{r}
+clean_data <- readRDS("community.rds")
+library(tidyverse)
+```
+
+## Data Visualization: COVID-19 in Columbia County
+```{r}
+# Seeing COVID-19 Cases per 100K over Time
+ggplot(clean_data %>% filter(county == "Columbia County"), aes(x = date_updated, y = covid_cases_per_100k)) + geom_line() + labs(x = "Date", y = "Cases Per 100K")
+
+# Boxplots of Inpatient Bed Utilization vs COVID Cases per 100K by Threat Level
+clean_data <- clean_data %>% rename(Threat_Level = `covid-19_community_level`) %>% mutate(Threat_Level = factor(Threat_Level, levels = c("Low", "Medium", "High")))
+
+ggplot(clean_data %>% filter(county == "Columbia County"), aes(x = covid_cases_per_100k, y = covid_inpatient_bed_utilization, group = Threat_Level, fill = Threat_Level)) + geom_boxplot() + labs(x = "Covid Cases per 100K", y = "COVID Inpatient Bed Utilization")
+```
+
+## Data Visualization: COVID-19 in Georgia Counties that Start w/the Letter C
+```{r}
+# What Counties Have the Most COVID-19 Hospital Admissions?
+ggplot(clean_data %>% filter(substr(county, 1, 1) == "C"), aes(x = covid_hospital_admissions_per_100k, y = county)) + geom_col()
+```
