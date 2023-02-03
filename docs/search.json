@@ -21,6 +21,34 @@
     "text": "Fitting GDP against Infant Mortality and Population in a Linear Model\n\n## Feeling a little curious so I made some graphs...\n\n### Wonder what effects GDP on IM looks like...\n\nggplot2::ggplot(data = africadata_2000, mapping = aes(x = log(gdp),\n                                                      y = log(infant_mortality))) +\n  geom_point() + labs(x = \"Log GDP\", y = \"Log Infant Mortality\", \n                      title = \"Effects of GDP on Infant Mortality in 2000\")\n\n\n\n### Cool, cool. Now what if I do this with population...\nggplot2::ggplot(data = africadata_2000, mapping = aes(x = log(gdp),\n                                                      y = log(population))) +\n  geom_point() + labs(x = \"Log GDP\", y = \"Log Population\", \n                      title = \"Effects of GDP on Population in 2000\")\n\n\n\n#### ^^ NICEEEEE!\n\n\n## Fitting GDP against Infant Mortality\nfit3 <- lm(gdp ~ infant_mortality, data = africadata_2000)\n\n### Fit3 results\ntidy(fit3)\n\n# A tibble: 2 × 5\n  term                 estimate   std.error statistic  p.value\n  <chr>                   <dbl>       <dbl>     <dbl>    <dbl>\n1 (Intercept)      32124071647. 9128139601.      3.52 0.000945\n2 infant_mortality  -260618189.  107937461.     -2.41 0.0195  \n\n## Fitting GDP against Population\nfit4 <- lm(gdp ~ population, data=africadata_2000)\n\n### Fit 4 results\ntidy(fit4)\n\n# A tibble: 2 × 5\n  term           estimate   std.error statistic   p.value\n  <chr>             <dbl>       <dbl>     <dbl>     <dbl>\n1 (Intercept) 1620865586. 3499336123.     0.463 0.645    \n2 population         634.        130.     4.88  0.0000119\n\n\nFit 3 model suggests that there may be a negative association between GDP and Infant Mortality. Since the p-value is less than our alpha of 0.05 (p < 0.02), we find these results to be significant. Fit 3 model suggest that there may be a positive association between GDP and population. Since the p-value is less than our alpha of 0.05 (p < 0.001), we can reject the null hypothesis (no association)."
   },
   {
+    "objectID": "dataanalysis_exercise.html",
+    "href": "dataanalysis_exercise.html",
+    "title": "My Data Analysis Portfolio",
+    "section": "",
+    "text": "This data was obtained from data.cdc.gov and contains data from 2/24/2022 to 1/26/2023. This dataset contains the same values used to display information available on the COVID Data Tracker, and is updated weekly. The CDC combines three metrics (new COVID-19 admissions per 100,000 population in the past 7 days, the percent of staffed inpatient beds occupied by COVID-19 patients, and total new COVID-19 cases per 100,000 population in the past 7 days) to determine the COVID-19 community level and classify it as low, medium, or high. This community level can help people and communities make decisions based on their circumstances and individual needs. It has a total of 12 columns and 158,000 rows including all available county data.\nI decided to keep the “date_updated” variable as there will be multiple observations for each county.\nI decided I needed to reduce the number of observations to make this data a little easier to use; I decided to filter by Georgia to bring this number down as well as give me some relatable data.\nThis is still a lot of observations, so I decided to filter to approximately a six-month period (07-28-2022 - 01-26-2023)\nI think it would be interesting to use this data analyze the number of COVID cases per 100k in relation to bed utilization and hospital admissions, as well as the number of cases per 100k over time to observe trends in infection. I don;t know the best way to incorporate it, but a graph (boxplot maybe?) including the community leel would also be cool to see. These analyses could tell us something about COVID 19 case trends in Georgia during these last 6 months; as the pandemic draws on after almost 3 year it would be interesting to see what level of community severity still exists."
+  },
+  {
+    "objectID": "dataanalysis_exercise.html#load-cleaned-data-and-load-necessary-libraries",
+    "href": "dataanalysis_exercise.html#load-cleaned-data-and-load-necessary-libraries",
+    "title": "My Data Analysis Portfolio",
+    "section": "Load Cleaned Data and Load Necessary Libraries",
+    "text": "Load Cleaned Data and Load Necessary Libraries\n\nclean_data <- readRDS(\"community.rds\")\nlibrary(tidyverse)"
+  },
+  {
+    "objectID": "dataanalysis_exercise.html#data-visualization-covid-19-in-columbia-county",
+    "href": "dataanalysis_exercise.html#data-visualization-covid-19-in-columbia-county",
+    "title": "My Data Analysis Portfolio",
+    "section": "Data Visualization: COVID-19 in Columbia County",
+    "text": "Data Visualization: COVID-19 in Columbia County\n\n# Seeing COVID-19 Cases per 100K over Time\nggplot(clean_data %>% filter(county == \"Columbia County\"), aes(x = date_updated, y = covid_cases_per_100k)) + geom_line() + labs(x = \"Date\", y = \"Cases Per 100K\")\n\n\n\n# Boxplots of Inpatient Bed Utilization vs COVID Cases per 100K by Threat Level\nclean_data <- clean_data %>% rename(Threat_Level = `covid-19_community_level`) %>% mutate(Threat_Level = factor(Threat_Level, levels = c(\"Low\", \"Medium\", \"High\")))\n\nggplot(clean_data %>% filter(county == \"Columbia County\"), aes(x = covid_cases_per_100k, y = covid_inpatient_bed_utilization, group = Threat_Level, fill = Threat_Level)) + geom_boxplot() + labs(x = \"Covid Cases per 100K\", y = \"COVID Inpatient Bed Utilization\")"
+  },
+  {
+    "objectID": "dataanalysis_exercise.html#data-visualization-covid-19-in-georgia-counties-that-start-wthe-letter-c",
+    "href": "dataanalysis_exercise.html#data-visualization-covid-19-in-georgia-counties-that-start-wthe-letter-c",
+    "title": "My Data Analysis Portfolio",
+    "section": "Data Visualization: COVID-19 in Georgia Counties that Start w/the Letter C",
+    "text": "Data Visualization: COVID-19 in Georgia Counties that Start w/the Letter C\n\n# What Counties Have the Most COVID-19 Hospital Admissions?\nggplot(clean_data %>% filter(substr(county, 1, 1) == \"C\"), aes(x = covid_hospital_admissions_per_100k, y = county)) + geom_col()"
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "MADA website and data analysis portfolio",
