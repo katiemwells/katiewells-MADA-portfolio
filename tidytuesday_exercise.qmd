@@ -5,4 +5,125 @@ output:
     toc: FALSE
 ---
 
-Placeholder file for the future Tidy Tuesday exercise.
+Here's my contribution to the Tidy Tuesday analysis for the 2/14/23 dataset Hollywood Age Gaps. This data was taken from Hollywood Age Gap via https://www.data-is-plural.com/archive/2018-02-07-edition/. It takes a look at the differences between ages in couples in movies. Some things I would like to explore are:
+
+1\) the relationship between release year and age differences
+
+2\) how actor/character age and gender are related
+
+3\) how much the movies deviate from the average age difference
+
+Let's load the packages I'll need.
+
+```{r warning=FALSE}
+#load packages
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+```
+
+Now for the data; let's load it and take a look at the structure.
+
+```{r warning=FALSE}
+#load data
+age_gaps <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-02-14/age_gaps.csv')
+```
+
+```{r}
+glimpse(age_gaps)
+```
+
+This data has been relatively cleaned and wrangled already; let's just get some stats I might be interested in.
+
+```{r}
+age_gaps %>% pull(release_year) %>% range()
+age_gaps %>% pull(actor_1_age) %>% range()
+age_gaps %>% pull(actor_2_age) %>% range()
+age_gaps %>% pull(age_difference) %>% range()
+```
+
+This gives me the range of release years, actor ages, and age differences for all the movies. Seeing these, let's plot the release years against age differences and see if any trends appear. Just for fun, let's make this interactive so we can see which movies fall where. This will let me hover over each dot and see the movie name and age difference. I can do this with plotly.
+
+```{r}
+plot <- age_gaps %>% ggplot(aes(x=release_year, y=age_difference)) +
+  geom_point() +
+  geom_smooth(method = "lm") + 
+  labs(title="Age Gaps in Movies through the Years", x="Year", y="Age Difference")
+ggplotly(plot)
+```
+
+Well...there seems to be a slight negative correlation between release year and age difference, but more movies have been released in recent years which is likely skewing the data. The interactive portion provided by plotly() makes it very easy to see the movie with the largest age difference (52 years) was released in 1971.
+
+Let's look at the frequency of age differences with a bar graph. 
+```{r}
+age_gaps %>% ggplot(aes(x=age_difference)) + 
+  geom_bar(fill="#00C5CD") + 
+  scale_x_continuous(n.breaks=10) + 
+  labs(title="Age Gap Frequency", x="Age difference (years)", y="observations")
+```
+Looks like 2 and 3 years is the most popular age gap in these movies. 
+
+After examining the data further, I noticed that actor 1 (and therefore character 1) was always the older of the couple. I want to see the distribution of age difference based on whether the older character is male or female. I think a boxplot would be a good way to visualize this information.
+
+```{r}
+#make a boxplot of character 1 gender vs. age difference
+age_gaps %>% ggplot(aes(x=character_1_gender, y=age_difference, fill=character_1_gender)) + 
+  geom_boxplot() + 
+  stat_summary(fun = "mean", geom = "point", shape = 8, size = 2, color = "black") + 
+  labs(x="Older Character Gender", y="Age Difference (years)") + 
+  ggtitle("Age Difference and Older Character's Gender")
+```
+
+This tells us there are many more movies where the older character is male and that the mean and median age difference is higher in those movies. The one very obvious outlier of Harold and Maude on the older female character side is visible here.
+
+
+Let's see how a random sample of movies compares to the average age difference of this dataset.
+
+```{r}
+#calculate the mean age difference
+age_gaps %>% pull(age_difference) %>% mean()
+```
+
+```{r}
+#take a (fixed) random sample (so y'all can reproduce if you want)
+set.seed(20)
+rand_age <- age_gaps %>% sample_n(size=20)
+```
+
+```{r}
+#make a new column with the z score (normalized age difference)
+rand_age <- rand_age %>% mutate(diff_z = round((age_difference - mean(age_difference))/sd(age_difference), 2))  
+#make a new column telling whether each movie is above or below the average
+rand_age <- rand_age %>% mutate(diff_v = ifelse(diff_z < 0, "below", "above"))
+```
+
+I wanted a way to show how different these movies were from each other (and the average) in terms of age difference, and a StackOverflow post gave me the idea to do a diverging bar graph.
+
+```{r}
+#graph a diverging bar plot showing how many standard deviations each movie is away from the mean
+ggplot(rand_age, aes(x=movie_name, y=diff_z, label=diff_z)) + 
+  geom_bar(stat='identity', aes(fill=diff_v), width=.5)  +
+  scale_fill_manual(name="Age Difference", 
+                    labels = c("Above Average", "Below Average"), 
+                    values = c("above"="#00C5CD", "below"="#f8766d")) + 
+  labs(title= "Movies & their deviations from the average age difference", x="Movie Name", y="Standard Deviation") + 
+  coord_flip()
+```
+
+Seems like most of the movies in this random sample fall below the average of 10.42424 years between the actors.
+
+Just for fun, let's see how many movies in the whole dataset are above or below the average. There's no way to be able to see all of them in a graph like the one above so let's just look at the numbers.
+
+```{r}
+#make a new column with the z score (normalized age difference)
+age_gaps <- age_gaps %>% mutate(diff_z = round((age_difference - mean(age_difference))/sd(age_difference), 2))  
+#make a new column telling whether each movie is above or below the average
+age_gaps <- age_gaps %>% mutate(diff_v = ifelse(diff_z < 0, "below", "above"))
+#get counts of above and below the average
+age_gaps %>% pull(diff_v) %>% table()
+```
+
+Looks like a 60/40 split.
+
+
+Overall it looks like: age gaps have decreased over the years (but movie release has increased), 2-3 years is the most common age gap, men are usually the older actor/character, and only around 40% of movies in this dataset have an above average age difference. 
