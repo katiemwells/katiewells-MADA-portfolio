@@ -1,0 +1,27 @@
+Wrangling
+
+Loading the needed packages and the raw data.
+```{r warning=FALSE}
+#load required packages
+library(tidyverse)
+library(here)
+```
+
+```{r}
+#load data
+flu <- readRDS(here("fluanalysis", "data", "SympAct_Any_Pos.Rda"))
+```
+
+Removing all variables that have: Score, Total, FluA, FluB, Dxname, or Activity in their name; also removing Unique.Visit and any NA observations. 
+```{r}
+#remove unnecessary variables
+flu <- flu %>% select(-contains(c("Score", "Total", "FluA", "FluB", "Dxname", "Activity")))
+flu <- flu %>% subset(select = -(Unique.Visit))
+flu <- flu %>% drop_na()
+```
+
+Saving the cleaned data in an RDS file. 
+```{r}
+saveRDS(flu, file = here("fluanalysis", "data", "flu2.rds"))
+```
+

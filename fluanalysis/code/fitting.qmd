@@ -1,0 +1,83 @@
+Model Fitting
+
+1. Load packages and cleaned data
+```{r warning=FALSE}
+#load required packages
+library(tidyverse)
+library(here)
+library(tidymodels)
+library(performance)
+```
+
+```{r}
+#load data
+flu2 <- readRDS(here("fluanalysis", "data", "flu2.rds"))
+```
+
+2. Linear Modeling with Main Predictor
+Here we will use tidymodels to fit a linear model to BodyTemp, first with just the main predictor RunnyNose and later with all predictors. 
+```{r}
+#specify functional form of model
+lm_mod <- linear_reg() %>% set_engine("lm") 
+#Fit a linear model to the continuous outcome (BodyTemp) using only the main predictor of interest (RunnyNose)
+lm_fit <- lm_mod %>% fit(BodyTemp ~ RunnyNose, data=flu2)
+lm_fit
+```
+```{r}
+#take a look at the results of lm_fit
+glance(lm_fit)
+```
+
+3. Linear Modeling with all predictors
+```{r}
+#Fit a linear model to the continuous outcome (BodyTemp) using all predictors
+lm_fit2 <- lm_mod %>% 
+          fit(BodyTemp ~ ., data = flu2)
+lm_fit2
+```
+
+```{r}
+#take a look at the results of lm_fit2
+glance(lm_fit2)
+```
+4. Comparing models
+I was struggling to figure out how to compare these models with code. I did some searching and came across the package performance(). I'm going to use the compare_performance() function to do this.
+
+```{r}
+compare_performance(lm_fit, lm_fit2)
+```
+
+5. Logistic Modeling with Main predictor
+Here we will use tidymodels to fit a logistic model to Nausea, first with just the main predictor RunnyNose and later with all predictors. 
+```{r}
+#specify functional form of model
+glm_mod <- logistic_reg() %>%
+  set_engine("glm")
+#Fit a logistic model to the categorical outcome (Nausea) using only the main predictor of interest (RunnyNose)
+glm_fit <- glm_mod %>% 
+          fit(Nausea ~ RunnyNose, data = flu2)
+glm_fit
+```
+
+
+```{r}
+#take a look athe the results of glm_fit
+glance(glm_fit)
+```
+
+6. Logistic modeling with all predictors
+```{r}
+#Fit a logistic model to the categorical outcome (Nausea) using all predictors
+glm_fit2 <- glm_mod %>% 
+          fit(Nausea ~ ., data = flu2)
+glm_fit2
+```
+
+```{r}
+glance(glm_fit2)
+```
+7. Comparing models
+```{r}
+compare_performance(glm_fit, glm_fit2)
+```
+The model with all predictors has a lower AIC, so it appears to be the better model. 

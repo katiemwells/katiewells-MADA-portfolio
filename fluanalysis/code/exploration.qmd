@@ -1,0 +1,47 @@
+Exploration
+
+Loading required packages and cleaned data. 
+```{r warning=FALSE}
+#load required packages
+library(tidyverse)
+library(here)
+```
+
+```{r}
+#load data
+flu2 <- readRDS(here("fluanalysis", "data", "flu2.rds"))
+```
+
+Summary statistics for BodyTemp and Nausea
+```{r}
+#provide summary data for important variables
+flu2 %>% pull(Nausea) %>% summary()
+flu2 %>% pull(BodyTemp) %>% summary()
+```
+Distribution of BodyTemp
+```{r}
+#look at the distribution of BodyTemp
+flu2 %>% ggplot(aes(x=BodyTemp)) + geom_histogram() 
+```
+Looks like of the body temperatures cluster around 98.5 degrees with some right skew. 
+
+Lets take a look ath the relationship between BodyTemp and some predictors. 
+```{r}
+flu2 %>% ggplot(aes(x=Nausea, y=BodyTemp)) + geom_boxplot()
+```
+Seems like median body temperature is just slightly higher in those with nausea than without. 
+
+```{r}
+flu2 %>% ggplot(aes(x=CoughIntensity, y=BodyTemp)) + geom_boxplot()
+```
+Median body temperature looks to increase as cough intensity increases. 
+
+```{r}
+flu2 %>% ggplot(aes(x=Sneeze, y=BodyTemp)) + geom_boxplot()
+```
+Looks like people who did not report sneezing have a higher median body temperature. Weird. 
+
+```{r}
+flu2 %>% ggplot(aes(x=Weakness, y=BodyTemp)) + geom_boxplot()
+```
+Median body temperature seems to increase as weakness increases. 
