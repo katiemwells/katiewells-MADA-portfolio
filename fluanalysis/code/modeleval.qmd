@@ -91,33 +91,7 @@ flu_aug %>%
 flu_aug %>% 
   roc_auc(truth = Nausea, .pred_No) 
 ```
-Now I will repeat the above procedures with the train data
 
-6. Using trained workflow to predict (train data)
-```{r}
-predict(flu_fit, train_data)
-```
-
-```{r}
-flu_aug_2 <- 
-  augment(flu_fit, train_data)
-```
-
-```{r}
-flu_aug_2 %>%
-  select(Nausea, .pred_No, .pred_Yes)
-```
-
-```{r}
-flu_aug_2 %>% 
-  roc_curve(truth = Nausea, .pred_No) %>% 
-  autoplot()
-```
-
-```{r}
-flu_aug_2 %>% 
-  roc_auc(truth = Nausea, .pred_No) 
-```
 Refitting with the main predicotr (RunnyNose) and using the trained model to predict with test and train data. 
 
 7. Alternative Model
@@ -170,32 +144,6 @@ flu_aug3 %>%
 
 ```{r}
 flu_aug3 %>% 
-  roc_auc(truth = Nausea, .pred_No) 
-```
-
-9. Using trained workflow to predict (train data)
-```{r}
-predict(flu_fit2, train_data)
-```
-
-```{r}
-flu_aug_4 <- 
-  augment(flu_fit2, train_data)
-```
-
-```{r}
-flu_aug_4 %>%
-  select(Nausea, .pred_No, .pred_Yes)
-```
-
-```{r}
-flu_aug_4 %>% 
-  roc_curve(truth = Nausea, .pred_No) %>% 
-  autoplot()
-```
-
-```{r}
-flu_aug_4 %>% 
   roc_auc(truth = Nausea, .pred_No) 
 ```
 
