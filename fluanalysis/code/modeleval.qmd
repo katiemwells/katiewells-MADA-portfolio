@@ -1,0 +1,202 @@
+Model Evaluation
+
+1. Loading packages and cleaned data
+```{r}
+# load packages
+library(tidyverse)
+library(here)
+library(tidymodels)
+library(performance)
+library(skimr)
+```
+
+```{r}
+# load cleaned data
+flu2 <- readRDS(here("fluanalysis", "data", "flu2.rds"))
+```
+
+2. Split data
+```{r}
+set.seed(222)
+# Put 3/4 of the data into the training set 
+data_split <- initial_split(flu2, prop = 3/4)
+
+# Create data frames for the two sets:
+train_data <- training(data_split)
+test_data  <- testing(data_split)
+```
+
+3. Create recipe
+```{r}
+flu_rec <- 
+  recipe(Nausea ~ ., data = train_data) 
+```
+
+4. Fit model with recipe
+```{r}
+#setting logistic regression engine
+lr_mod <- 
+  logistic_reg() %>% 
+  set_engine("glm")
+```
+
+```{r}
+#creating workflow using model and recipe
+flu_wflow <- 
+  workflow() %>% 
+  add_model(lr_mod) %>% 
+  add_recipe(flu_rec)
+flu_wflow
+```
+
+```{r}
+#make function to prepare the recipe and train the model 
+flu_fit <- 
+  flu_wflow %>% 
+  fit(data = train_data)
+```
+
+```{r}
+#pull fitting model object and make tibble of model coefficients
+flu_fit %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
+```
+
+5. Using trained workflow to predict (test data)
+```{r}
+#use trained model to predict with unseen data
+predict(flu_fit, test_data)
+```
+```{r}
+#save above together to use to get ROC
+flu_aug <- 
+  augment(flu_fit, test_data)
+```
+```{r}
+#view the data
+flu_aug %>%
+  select(Nausea, .pred_No, .pred_Yes)
+```
+
+```{r}
+#create ROC curve with predicted class probabilities 
+flu_aug %>% 
+  roc_curve(truth = Nausea, .pred_No) %>% 
+  autoplot()
+```
+
+```{r}
+#ROC estimate
+flu_aug %>% 
+  roc_auc(truth = Nausea, .pred_No) 
+```
+Now I will repeat the above procedures with the train data
+
+6. Using trained workflow to predict (train data)
+```{r}
+predict(flu_fit, train_data)
+```
+
+```{r}
+flu_aug_2 <- 
+  augment(flu_fit, train_data)
+```
+
+```{r}
+flu_aug_2 %>%
+  select(Nausea, .pred_No, .pred_Yes)
+```
+
+```{r}
+flu_aug_2 %>% 
+  roc_curve(truth = Nausea, .pred_No) %>% 
+  autoplot()
+```
+
+```{r}
+flu_aug_2 %>% 
+  roc_auc(truth = Nausea, .pred_No) 
+```
+Refitting with the main predicotr (RunnyNose) and using the trained model to predict with test and train data. 
+
+7. Alternative Model
+```{r}
+flu_rec2 <- 
+  recipe(Nausea ~ RunnyNose, data = train_data) 
+```
+
+
+```{r}
+flu_wflow2 <- 
+  workflow() %>% 
+  add_model(lr_mod) %>% 
+  add_recipe(flu_rec2)
+flu_wflow2
+```
+
+```{r}
+flu_fit2 <- 
+  flu_wflow2 %>% 
+  fit(data = train_data)
+```
+
+```{r}
+flu_fit2 %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
+```
+
+8. Using trained workflow to predict (test data)
+```{r}
+predict(flu_fit2, test_data)
+```
+
+```{r}
+flu_aug3 <- 
+  augment(flu_fit2, test_data)
+```
+
+```{r}
+flu_aug3 %>%
+  select(Nausea, .pred_No, .pred_Yes)
+```
+
+```{r}
+flu_aug3 %>% 
+  roc_curve(truth = Nausea, .pred_No) %>% 
+  autoplot()
+```
+
+```{r}
+flu_aug3 %>% 
+  roc_auc(truth = Nausea, .pred_No) 
+```
+
+9. Using trained workflow to predict (train data)
+```{r}
+predict(flu_fit2, train_data)
+```
+
+```{r}
+flu_aug_4 <- 
+  augment(flu_fit2, train_data)
+```
+
+```{r}
+flu_aug_4 %>%
+  select(Nausea, .pred_No, .pred_Yes)
+```
+
+```{r}
+flu_aug_4 %>% 
+  roc_curve(truth = Nausea, .pred_No) %>% 
+  autoplot()
+```
+
+```{r}
+flu_aug_4 %>% 
+  roc_auc(truth = Nausea, .pred_No) 
+```
+
+The model using only runny nose as a predictor had lower ROC than the model with all predictors. 
