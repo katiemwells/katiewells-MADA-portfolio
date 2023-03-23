@@ -288,4 +288,4 @@ ggplot(flu_ln_aug3, aes(x = BodyTemp, y = .pred)) +
   coord_obs_pred() +
   labs(x = 'Actual Body Temperature', y = 'Predicted Body Temperature')
 ```
-Runny nose is a very poor predictor of body temperature!
+The model preformed very poorly using runny nose as predictor of body temperature. I am also wondering why the model only had two different predictions, and makes me think that something may have went wrong with setting up the model?
