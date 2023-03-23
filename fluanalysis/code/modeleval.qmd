@@ -6,8 +6,6 @@ Model Evaluation
 library(tidyverse)
 library(here)
 library(tidymodels)
-library(performance)
-library(skimr)
 ```
 
 ```{r}
@@ -147,4 +145,147 @@ flu_aug3 %>%
   roc_auc(truth = Nausea, .pred_No) 
 ```
 
-The model using only runny nose as a predictor had lower ROC than the model with all predictors. 
+The model using only runny nose as a predictor had a lower ROC than the model with all predictors. 
+
+
+# This section added by Hayley Hemme
+9. Create recipe
+```{r}
+flu_ln_rec <- 
+  recipe(BodyTemp ~ ., data = train_data) 
+```
+
+10. Fit linear model
+```{r}
+#setting linear regression engine
+ln_mod <- 
+  linear_reg() %>% 
+  set_engine("lm") %>% 
+  set_mode("regression")
+```
+
+```{r}
+#creating workflow using model and recipe
+flu_ln_wflow <- 
+  workflow() %>% 
+  add_model(ln_mod) %>% 
+  add_recipe(flu_ln_rec)
+```
+
+```{r}
+#make function to prepare the recipe and train the model 
+flu_ln_fit <- 
+  flu_ln_wflow %>% 
+  fit(data = train_data)
+```
+
+```{r}
+#pull fitting model object and make tibble of model coefficients
+flu_ln_fit %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
+```
+10. Using trained workflow to predict (test data)
+```{r}
+#use trained model to predict with unseen data
+predict(flu_ln_fit, test_data)
+```
+```{r}
+#save above together 
+flu_ln_aug <- 
+  augment(flu_ln_fit, test_data)
+```
+```{r}
+#view the data
+flu_ln_aug %>%
+  select(BodyTemp, .pred)
+```
+
+Measuring model fit - RMSE
+```{r}
+flu_ln_aug %>%
+  rmse(truth = BodyTemp, .pred)
+```
+
+Let's also measure model fit using R2
+```{r}
+flu_ln_aug %>% 
+  rsq(truth = BodyTemp, .pred) 
+```
+
+Making a plot using predictions
+```{r}
+ggplot(flu_ln_aug, aes(x = BodyTemp, y = .pred)) +
+  geom_point(alpha = 0.5) + 
+  geom_abline(color = 'blue', linetype = 2) +
+  coord_obs_pred() +
+  labs(x = 'Actual Body Temperature', y = 'Predicted Body Temperature')
+```
+This trained model is not very well suited to predict body temperature using all the predictors in the model. Let move on and...
+
+Refit with the main predictor (RunnyNose) and use the trained model to predict with test and train data. 
+11. Alternative Model
+Creating recipe
+```{r}
+flu_ln_rec2 <- 
+  recipe(BodyTemp ~ RunnyNose, data = train_data) 
+```
+
+Making workflow object
+```{r}
+flu_ln_wflow2 <- 
+  workflow() %>% 
+  add_model(ln_mod) %>% 
+  add_recipe(flu_ln_rec2)
+```
+
+Making fit object
+```{r}
+flu_ln_fit2 <- 
+  flu_ln_wflow2 %>% 
+  fit(data = train_data)
+```
+
+Extracting data of the model fit
+```{r}
+flu_ln_fit2 %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
+```
+
+12. Using trained workflow to predict (test data)
+```{r}
+predict(flu_ln_fit2, test_data)
+```
+
+```{r}
+flu_ln_aug3 <- 
+  augment(flu_ln_fit2, test_data)
+```
+
+```{r}
+flu_ln_aug3 %>%
+  select(BodyTemp, .pred)
+```
+
+Measuring model fit - RMSE
+```{r}
+flu_ln_aug3 %>%
+  rmse(truth = BodyTemp, .pred)
+```
+
+Let's also measure model fit using R2
+```{r}
+flu_ln_aug3 %>% 
+  rsq(truth = BodyTemp, .pred) 
+```
+
+Make an R2 plot using predictions 
+```{r}
+ggplot(flu_ln_aug3, aes(x = BodyTemp, y = .pred)) +
+  geom_point(alpha = 0.5) + 
+  geom_abline(color = 'blue', linetype = 2) +
+  coord_obs_pred() +
+  labs(x = 'Actual Body Temperature', y = 'Predicted Body Temperature')
+```
+The model preformed very poorly using runny nose as predictor of body temperature. I am also wondering why the model only had two different predictions, and makes me think that something may have went wrong with setting up the model?
