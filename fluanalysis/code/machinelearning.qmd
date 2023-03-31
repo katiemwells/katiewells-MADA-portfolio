@@ -1,0 +1,400 @@
+Machine Learning
+
+Loading the needed packages and the raw data.
+```{r warning=FALSE, message=FALSE}
+#load required packages
+library(tidyverse)
+library(here)
+library(tidymodels)
+library(ranger)
+library(glmnet)
+library(rpart.plot)
+library(vip)
+```
+
+```{r}
+# load cleaned data
+flu2 <- readRDS(here("fluanalysis", "data", "flu2.rds"))
+```
+
+Setup
+```{r}
+#set seed
+set.seed(123)
+#split data
+split <- initial_split(flu2, strata = BodyTemp, prop = 7/10)
+#create test and train datasets
+flu_train1 <- training(split)
+flu_test1 <- testing(split)
+```
+
+```{r}
+#cross-validation 5 x 5
+folds_train <- vfold_cv(flu_train1, v = 5, repeats = 5, strata = BodyTemp)
+folds_train
+
+folds_test <- vfold_cv(flu_test1, v = 5, repeats = 5, strata = BodyTemp)
+folds_test
+```
+
+Making recipe
+```{r}
+#recipe creation
+flu_rec <- recipe(BodyTemp ~ ., data = flu_train1) %>%
+  step_dummy(all_nominal(), -all_outcomes()) 
+```
+
+Null model
+```{r}
+#null model 
+null_mod <- null_model() %>% 
+  set_engine("parsnip") %>%
+  set_mode("regression")
+```
+
+
+## training data
+```{r message=FALSE}
+#null model recipe with training data
+null_recipe_train <- recipe(BodyTemp ~ 1, data = flu_train1)
+
+null_wf_train <- workflow() %>% add_model(null_mod) %>% add_recipe(null_recipe_train)
+
+null_train_fit <- 
+  fit_resamples(null_wf_train, resamples = folds_train)
+```
+
+
+## testing data
+
+```{r message=FALSE}
+#null model recipe with testing data
+null_recipe_test <- recipe(BodyTemp ~ 1, data = flu_test1)
+
+null_wf_test <- workflow() %>% add_model(null_mod) %>% add_recipe(null_recipe_test)
+
+null_test_fit <- 
+  fit_resamples(null_wf_test, resamples = folds_test)
+```
+
+
+```{r}
+#collect metrics from null 
+null_train_fit %>% collect_metrics()
+null_test_fit %>% collect_metrics()
+```
+
+
+Model Tuning and Fitting
+
+Tree
+
+## Model Specification
+```{r}
+tune_spec <- decision_tree(cost_complexity = tune(),
+                           tree_depth = tune()) %>%
+  set_engine("rpart") %>%
+  set_mode("regression")
+tune_spec
+
+```
+
+## Workflow Definition
+```{r}
+tree_wf <- workflow() %>%
+  add_model(tune_spec) %>%
+  add_recipe(flu_rec)
+```
+
+## Tuning Grid Specification
+```{r}
+tree_grid <- grid_regular(cost_complexity(),
+                          tree_depth(),
+                          levels = 5)
+tree_grid
+tree_grid %>%
+  count(tree_depth)
+```
+
+## Tuning using Cross-Validation and Tune_grid()
+```{r}
+tree_res <- tree_wf %>%
+  tune_grid(
+    resamples = folds_train,
+    grid = tree_grid
+  )
+tree_res
+tree_res %>%
+  collect_metrics()
+
+```
+
+```{r}
+#plot using autoplot
+tree_res %>% autoplot()
+```
+
+```{r}
+#getting best model
+tree_res %>%
+  show_best(metric = "rmse")
+best_tree <- tree_res %>%
+  select_best(metric = "rmse")
+best_tree
+```
+
+Finalizing fit with best model
+```{r}
+#finalizing workflows with best models
+final_tree_wf <- tree_wf %>%
+  finalize_workflow(best_tree)
+
+final_tree_fit <- final_tree_wf %>% fit(data=flu_train1)
+final_tree_fit
+```
+```{r}
+#plot tree
+rpart.plot(extract_fit_parsnip(final_tree_fit)$fit)
+```
+
+
+# Lasso
+
+## Model Specification
+```{r}
+lr_mod <- linear_reg(penalty = tune(), mixture = 1) %>%
+  set_engine("glmnet")
+```
+
+## Workflow Definition
+```{r}
+lr_workflow <- workflow() %>% 
+  add_model(lr_mod) %>% 
+  add_recipe(flu_rec)
+```
+
+## Tuning Grid Specification
+```{r}
+lr_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
+lr_reg_grid %>% top_n(-5)
+lr_reg_grid %>% top_n(5)
+```
+
+## Tuning using cross-validation and the tune_grid() function
+```{r}
+lr_res <- lr_workflow %>%
+  tune_grid(resamples = folds_train,
+            grid = lr_reg_grid,
+            control = control_grid(verbose = FALSE, save_pred = TRUE),
+            metrics = metric_set(rmse))
+
+lr_res %>% collect_metrics()
+```
+
+```{r}
+#plot using autoplot
+lr_res %>% autoplot()
+```
+
+```{r}
+#getting best model
+lr_res %>%
+  show_best(metric = "rmse")
+best_lr <- lr_res %>%
+  select_best(metric = "rmse")
+best_lr
+```
+
+```{r}
+#finalizing workflows with best models
+final_lr_wf <- lr_workflow %>%
+  finalize_workflow(best_lr)
+
+final_lr_fit <- final_lr_wf %>% fit(data=flu_train1)
+final_lr_fit
+```
+
+```{r}
+x <- final_lr_fit$fit$fit$fit
+plot(x, "lambda")
+```
+
+
+Random Forest
+
+## Model Specification
+```{r}
+cores <- parallel::detectCores()
+cores
+rf_mod <-
+  rand_forest(mtry = tune(), min_n = tune(), trees = 1000) %>%
+  set_engine("ranger", num.threads = cores) %>%
+  set_mode("regression")
+```
+
+## Workflow Definition
+```{r}
+rf_workflow <-
+  workflow() %>%
+  add_model(rf_mod) %>%
+  add_recipe(flu_rec)
+```
+
+## Tuning Grid Specification
+```{r}
+rf_mod
+extract_parameter_set_dials(rf_mod)
+```
+
+## Tuning Using Cross-Validation and the Tune_Grid()
+```{r}
+rf_res <- rf_workflow %>%
+  tune_grid(resamples = folds_train,
+            grid = 25,
+            control = control_grid(save_pred = TRUE),
+            metrics = metric_set(rmse))
+
+rf_res %>%
+  collect_metrics()
+```
+
+
+```{r}
+#plot with autoplot
+autoplot(rf_res)
+```
+
+```{r}
+#getting best model
+rf_res %>%
+  show_best(metric = "rmse")
+best_rf <- rf_res %>%
+  select_best(metric = "rmse")
+best_rf
+```
+
+```{r}
+#finalizing workflow with best model
+final_rf_wf <- rf_workflow %>%
+  finalize_workflow(best_rf)
+
+final_rf_fit <- final_rf_wf %>% fit(data=flu_train1)
+final_rf_fit
+```
+
+
+
+## Model Evaluation
+
+
+### graphing actual vs predicted and residuals for each model
+
+#### Tree
+```{r}
+# get predicted and residual values in one dataset 
+## using augment() instead of predict() here so I can store everything in one df for easier graphing
+tree_predict <- final_tree_fit %>%
+  augment(flu_train1) %>% 
+  select(c(.pred, BodyTemp)) %>%
+  mutate(resid = BodyTemp - .pred) 
+tree_predict
+# Plot actual values vs predicted values
+tree_pred_plot <- tree_predict %>%
+  ggplot(aes(x = BodyTemp, y = .pred)) + 
+  geom_point() + 
+  labs(title = "Predictions vs Actual", 
+       x = "Body Temp Actual", 
+       y = "Body Temp Prediction")
+tree_pred_plot
+# Plot pred values vs residuals
+tree_resid_plot <- tree_predict %>% 
+  ggplot(aes(x = resid, y = .pred)) + 
+  geom_point() +
+  labs(title = "Predictions vs Residual", 
+       x = "Body Temp Residual", 
+       y = "Body Temp Prediction")
+tree_resid_plot
+```
+#### Lasso
+
+```{r}
+# repeating the above process for lasso
+# get predicted and residual values in one dataset 
+lr_predict <- final_lr_fit %>%
+  augment(flu_train1) %>% 
+  select(c(.pred, BodyTemp)) %>%
+  mutate(resid = BodyTemp - .pred) 
+lr_predict
+# Plot actual values vs predicted values
+lr_pred_plot <- lr_predict %>%
+  ggplot(aes(x = BodyTemp, y = .pred)) + 
+  geom_point() + 
+  labs(title = "Predictions vs Actual", 
+       x = "Body Temp Actual", 
+       y = "Body Temp Prediction")
+lr_pred_plot
+# Plot pred values vs residuals
+lr_resid_plot <- lr_predict %>% 
+  ggplot(aes(x = resid, y = .pred)) + 
+  geom_point() +
+  labs(title = "Predictions vs Residual", 
+       x = "Body Temp Residual", 
+       y = "Body Temp Prediction")
+lr_resid_plot
+```
+
+#### Random forest
+```{r}
+# repeating again for random forest
+# get predicted and residual values in one dataset 
+rf_predict <- final_rf_fit %>%
+  augment(flu_train1) %>% 
+  select(c(.pred, BodyTemp)) %>%
+  mutate(resid = BodyTemp - .pred) 
+rf_predict
+# Plot actual values vs predicted values
+rf_pred_plot <- rf_predict %>%
+  ggplot(aes(x = BodyTemp, y = .pred)) + 
+  geom_point() + 
+  labs(title = "Predictions vs Actual", 
+       x = "Body Temp Actual", 
+       y = "Body Temp Prediction")
+rf_pred_plot
+# Plot pred values vs residuals
+rf_resid_plot <- rf_predict %>% 
+  ggplot(aes(x = resid, y = .pred)) + 
+  geom_point() +
+  labs(title = "Predictions vs Residual", 
+       x = "Body Temp Residual", 
+       y = "Body Temp Prediction")
+rf_resid_plot
+```
+
+### viewing performance 
+```{r}
+#comparing best models to null model to determine which model performed the best
+tree_res %>%
+  show_best(metric = "rmse", n=1)
+lr_res %>%
+  show_best(metric = "rmse", n=1)
+rf_res %>%
+  show_best(metric = "rmse", n=1)
+null_train_fit %>% 
+  collect_metrics(metric = "rmse")
+```
+#### After evaluating all the models it appears that LASSO preformed the best as it has the lowest RMSE at 1.15 so I will be using it as my final model. 
+
+Final evaluation
+```{r}
+#fitting lasso model to testing data with last_fit()
+lr_last_fit <- final_lr_wf %>%
+  last_fit(split)
+
+lr_last_fit %>% collect_metrics()
+
+#includign null test metric for comparison
+null_test_fit %>% collect_metrics()
+```
+#### I attempted the graphs but was throwing major errors trying to predict() or augment() based on a last_fit object. If I have time I will attempt this again but it will likely be later. Maybe someone else was successful and could provide some pointers?
+
+The last fit returned an RMSE of 1.15341145 which is slightly higher than the best LASSO model above but better than the null model ran against the testing data. 

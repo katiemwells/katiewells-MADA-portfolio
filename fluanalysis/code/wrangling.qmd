@@ -5,6 +5,7 @@ Loading the needed packages and the raw data.
 #load required packages
 library(tidyverse)
 library(here)
+library(tidymodels)
 ```
 
 ```{r}
@@ -24,4 +25,47 @@ Saving the cleaned data in an RDS file.
 ```{r}
 saveRDS(flu, file = here("fluanalysis", "data", "flu2.rds"))
 ```
+
+## Preprocessing for Module 11
+
+```{r}
+#load data
+flu2 <- readRDS(here("fluanalysis", "data", "flu2.rds"))
+```
+
+
+```{r}
+## Feature/Variable Removal (Weakness, Cough (2x), Myalgia - Yes/No)
+flu2 <- flu2 %>%
+  select(-c(WeaknessYN, CoughYN, CoughYN2, MyalgiaYN))
+
+## Recipe Creation
+categorical_recipe <- recipe(~ SwollenLymphNodes + ChestCongestion + ChillsSweats + NasalCongestion + Sneeze + Fatigue + SubjectiveFever + Headache + RunnyNose + AbPain + ChestPain + Diarrhea + EyePn + Insomnia + ItchyEye + Nausea + EarPn + Pharyngitis + Breathless + ToothPn + Vomit + Wheeze, data = flu2)
+categorical_dummies <- categorical_recipe %>%
+  step_dummy(all_predictors()) %>%
+  prep(training = flu2)
+categorical_dummies_data <- bake(categorical_dummies, new_data = NULL)
+## Recipe Creation
+ord_levels <- c("None", "Mild", "Moderate", "Severe")
+flu2 <- flu2 %>%
+  mutate(Weakness = ordered(Weakness),
+         CoughIntensity = ordered(CoughIntensity),
+         Myalgia = ordered(Myalgia))
+ord_recipe <- recipe(~ Weakness + CoughIntensity + Myalgia, data = flu2)
+ord_dummies <- ord_recipe %>%
+  step_ordinalscore(all_predictors()) %>%
+  prep(training = flu2)
+ord_dummies_data <- bake(ord_dummies, new_data = NULL)
+
+## Low ("near-zero") variance predictors
+xtabs(~ Vision + Hearing, data = flu2)
+
+### Less than 50 observations where Hearing and Vision == "Yes"
+flu2 <- flu2 %>%
+  select(-c(Vision, Hearing))
+
+# Save cleaned set
+saveRDS(flu2, file = here("fluanalysis", "data", "flu2.rds"))
+```
+
 
