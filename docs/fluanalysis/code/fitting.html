@@ -190,6 +190,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="dropdown-item" href="../.././fluanalysis/code/modeleval.html">
  <span class="dropdown-text">Model Evaluation</span></a>
   </li>  
+        <li>
+    <a class="dropdown-item" href="../.././fluanalysis/code/machinelearning.html">
+ <span class="dropdown-text">Machine Learning</span></a>
+  </li>  
     </ul>
   </li>
 </ul>
@@ -254,7 +258,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 ✖ dplyr::lag()      masks stats::lag()
 ✖ yardstick::spec() masks readr::spec()
 ✖ recipes::step()   masks stats::step()
-• Dig deeper into tidy modeling with R at https://www.tmwr.org</code></pre>
+• Search for functions across packages at https://www.tidymodels.org/find/</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(performance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -319,32 +323,28 @@ Call:
 stats::lm(formula = BodyTemp ~ ., data = data)
 
 Coefficients:
-           (Intercept)    SwollenLymphNodesYes      ChestCongestionYes  
-             97.925243               -0.165302                0.087326  
-       ChillsSweatsYes      NasalCongestionYes              CoughYNYes  
-              0.201266               -0.215771                0.313893  
-             SneezeYes              FatigueYes      SubjectiveFeverYes  
-             -0.361924                0.264762                0.436837  
-           HeadacheYes            WeaknessMild        WeaknessModerate  
-              0.011453                0.018229                0.098944  
-        WeaknessSevere           WeaknessYNYes      CoughIntensityMild  
-              0.373435                      NA                0.084881  
-CoughIntensityModerate    CoughIntensitySevere             CoughYN2Yes  
-             -0.061384               -0.037272                      NA  
-           MyalgiaMild         MyalgiaModerate           MyalgiaSevere  
-              0.164242               -0.024064               -0.129263  
-          MyalgiaYNYes            RunnyNoseYes               AbPainYes  
-                    NA               -0.080485                0.031574  
-          ChestPainYes             DiarrheaYes                EyePnYes  
-              0.105071               -0.156806                0.131544  
-           InsomniaYes             ItchyEyeYes               NauseaYes  
-             -0.006824               -0.008016               -0.034066  
-              EarPnYes              HearingYes          PharyngitisYes  
-              0.093790                0.232203                0.317581  
-         BreathlessYes              ToothPnYes               VisionYes  
-              0.090526               -0.022876               -0.274625  
-              VomitYes               WheezeYes  
-              0.165272               -0.046665  </code></pre>
+         (Intercept)  SwollenLymphNodesYes    ChestCongestionYes  
+           98.268642             -0.166066              0.102608  
+     ChillsSweatsYes    NasalCongestionYes             SneezeYes  
+            0.191826             -0.221568             -0.372709  
+          FatigueYes    SubjectiveFeverYes           HeadacheYes  
+            0.272509              0.436694              0.004977  
+          Weakness.L            Weakness.Q            Weakness.C  
+            0.254046              0.128981              0.023351  
+    CoughIntensity.L      CoughIntensity.Q      CoughIntensity.C  
+            0.170659             -0.166954              0.129975  
+           Myalgia.L             Myalgia.Q             Myalgia.C  
+           -0.132614             -0.131992              0.093532  
+        RunnyNoseYes             AbPainYes          ChestPainYes  
+           -0.064666              0.015375              0.100308  
+         DiarrheaYes              EyePnYes           InsomniaYes  
+           -0.152344              0.128786             -0.005824  
+         ItchyEyeYes             NauseaYes              EarPnYes  
+           -0.003889             -0.033246              0.111125  
+      PharyngitisYes         BreathlessYes            ToothPnYes  
+            0.315991              0.086379             -0.035497  
+            VomitYes             WheezeYes  
+            0.160053             -0.034654  </code></pre>
 </div>
 </div>
 <div class="cell">
@@ -354,7 +354,7 @@ CoughIntensityModerate    CoughIntensitySevere             CoughYN2Yes
 <pre><code># A tibble: 1 × 12
   r.squ…¹ adj.r…² sigma stati…³ p.value    df logLik   AIC   BIC devia…⁴ df.re…⁵
     &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;   &lt;dbl&gt;   &lt;int&gt;
-1   0.129  0.0860  1.14    3.02 4.20e-8    34 -1116. 2304. 2469.    909.     695
+1   0.124  0.0853  1.14    3.19 2.47e-8    31 -1118. 2302. 2453.    914.     698
 # … with 1 more variable: nobs &lt;int&gt;, and abbreviated variable names
 #   ¹​r.squared, ²​adj.r.squared, ³​statistic, ⁴​deviance, ⁵​df.residual</code></pre>
 </div>
@@ -370,7 +370,7 @@ CoughIntensityModerate    CoughIntensitySevere             CoughYN2Yes
 Name    | Model |  AIC (weights) | AICc (weights) |  BIC (weights) |    R2 | R2 (adj.) |  RMSE | Sigma
 ------------------------------------------------------------------------------------------------------
 lm_fit  |   _lm | 2329.3 (&lt;.001) | 2329.4 (&lt;.001) | 2343.1 (&gt;.999) | 0.012 |     0.011 | 1.188 | 1.190
-lm_fit2 |   _lm | 2303.8 (&gt;.999) | 2307.7 (&gt;.999) | 2469.2 (&lt;.001) | 0.129 |     0.086 | 1.116 | 1.144</code></pre>
+lm_fit2 |   _lm | 2301.6 (&gt;.999) | 2304.8 (&gt;.999) | 2453.1 (&lt;.001) | 0.124 |     0.085 | 1.119 | 1.144</code></pre>
 </div>
 </div>
 <ol start="5" type="1">
@@ -425,36 +425,32 @@ Residual Deviance: 944.6    AIC: 948.6</code></pre>
 Call:  stats::glm(formula = Nausea ~ ., family = stats::binomial, data = data)
 
 Coefficients:
-           (Intercept)    SwollenLymphNodesYes      ChestCongestionYes  
-              0.222870               -0.251083                0.275554  
-       ChillsSweatsYes      NasalCongestionYes              CoughYNYes  
-              0.274097                0.425817               -0.140423  
-             SneezeYes              FatigueYes      SubjectiveFeverYes  
-              0.176724                0.229062                0.277741  
-           HeadacheYes            WeaknessMild        WeaknessModerate  
-              0.331259               -0.121606                0.310849  
-        WeaknessSevere           WeaknessYNYes      CoughIntensityMild  
-              0.823187                      NA               -0.220794  
-CoughIntensityModerate    CoughIntensitySevere             CoughYN2Yes  
-             -0.362678               -0.950544                      NA  
-           MyalgiaMild         MyalgiaModerate           MyalgiaSevere  
-             -0.004146                0.204743                0.120758  
-          MyalgiaYNYes            RunnyNoseYes               AbPainYes  
-                    NA                0.045324                0.939304  
-          ChestPainYes             DiarrheaYes                EyePnYes  
-              0.070777                1.063934               -0.341991  
-           InsomniaYes             ItchyEyeYes                EarPnYes  
-              0.084175               -0.063364               -0.181719  
-            HearingYes          PharyngitisYes           BreathlessYes  
-              0.323052                0.275364                0.526801  
-            ToothPnYes               VisionYes                VomitYes  
-              0.480649                0.125498                2.458466  
-             WheezeYes                BodyTemp  
-             -0.304435               -0.031246  
+         (Intercept)  SwollenLymphNodesYes    ChestCongestionYes  
+             0.05966              -0.24685               0.26529  
+     ChillsSweatsYes    NasalCongestionYes             SneezeYes  
+             0.29057               0.44007               0.16502  
+          FatigueYes    SubjectiveFeverYes           HeadacheYes  
+             0.23096               0.25502               0.33749  
+          Weakness.L            Weakness.Q            Weakness.C  
+             0.65600               0.31281              -0.11280  
+    CoughIntensity.L      CoughIntensity.Q      CoughIntensity.C  
+            -0.77141              -0.11999              -0.13857  
+           Myalgia.L             Myalgia.Q             Myalgia.C  
+             0.13177              -0.03511              -0.10548  
+        RunnyNoseYes             AbPainYes          ChestPainYes  
+             0.05264               0.94153               0.07153  
+         DiarrheaYes              EyePnYes           InsomniaYes  
+             1.06479              -0.32772               0.08410  
+         ItchyEyeYes              EarPnYes        PharyngitisYes  
+            -0.05269              -0.16544               0.29154  
+       BreathlessYes            ToothPnYes              VomitYes  
+             0.53063               0.48015               2.44716  
+           WheezeYes              BodyTemp  
+            -0.27581              -0.03136  
 
-Degrees of Freedom: 729 Total (i.e. Null);  695 Residual
+Degrees of Freedom: 729 Total (i.e. Null);  698 Residual
 Null Deviance:      944.7 
-Residual Deviance: 751.5    AIC: 821.5</code></pre>
+Residual Deviance: 752.1    AIC: 816.1</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -463,7 +459,7 @@ Residual Deviance: 751.5    AIC: 821.5</code></pre>
 <pre><code># A tibble: 1 × 8
   null.deviance df.null logLik   AIC   BIC deviance df.residual  nobs
           &lt;dbl&gt;   &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt;       &lt;int&gt; &lt;int&gt;
-1          945.     729  -376.  821.  982.     751.         695   730</code></pre>
+1          945.     729  -376.  816.  963.     752.         698   730</code></pre>
 </div>
 </div>
 <ol start="7" type="1">
@@ -471,26 +467,13 @@ Residual Deviance: 751.5    AIC: 821.5</code></pre>
 </ol>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">compare_performance</span>(glm_fit, glm_fit2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
-prediction from a rank-deficient fit may be misleading
-
-Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
-prediction from a rank-deficient fit may be misleading
-
-Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
-prediction from a rank-deficient fit may be misleading
-
-Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
-prediction from a rank-deficient fit may be misleading</code></pre>
-</div>
 <div class="cell-output cell-output-stdout">
 <pre><code># Comparison of Model Performance Indices
 
 Name     | Model | AIC (weights) | AICc (weights) | BIC (weights) | Tjur's R2 |  RMSE | Sigma | Log_loss | Score_log | Score_spherical |   PCP
 ----------------------------------------------------------------------------------------------------------------------------------------------
-glm_fit  |  _glm | 948.6 (&lt;.001) |  948.6 (&lt;.001) | 957.8 (&gt;.999) | 1.169e-04 | 0.477 | 1.139 |    0.647 |  -107.871 |           0.012 | 0.545
-glm_fit2 |  _glm | 821.5 (&gt;.999) |  825.1 (&gt;.999) | 982.2 (&lt;.001) |     0.247 | 0.414 | 1.040 |    0.515 |      -Inf |           0.002 | 0.658</code></pre>
+glm_fit  |  _glm | 948.6 (&lt;.001) |  948.6 (&lt;.001) | 957.8 (0.936) | 1.169e-04 | 0.477 | 1.139 |    0.647 |  -107.871 |           0.012 | 0.545
+glm_fit2 |  _glm | 816.1 (&gt;.999) |  819.2 (&gt;.999) | 963.1 (0.064) |     0.246 | 0.415 | 1.038 |    0.515 |      -Inf |           0.002 | 0.657</code></pre>
 </div>
 </div>
 <p>The model with all predictors has a lower AIC, so it appears to be the better model.</p>
