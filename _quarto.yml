@@ -18,6 +18,8 @@ website:
             href: ./tidytuesday_exercise.html
           - text: "Data Analysis Exercise"
             href: ./dataanalysis_exercise.html
+          - text: "Tidy Tuesday 2 Exercise"
+            href: ./tidytuesday_exercise2.html
       - text: "Flu Analysis"
         menu: 
           - text: "Wrangling"
@@ -30,13 +32,17 @@ website:
             href: ./fluanalysis/code/modeleval.html
           - text: "Machine Learning"
             href: ./fluanalysis/code/machinelearning.html
+      - text: "MADA Project"
+        menu: 
+          - text: "Project Highlights"
+            href: ./project.html
     right:
       - icon: github 
         href: https://github.com/katiemwells/katiewells-MADA-portfolio       
 
 format:
   html:
-    theme: cosmo
+    theme: minty
     highlight: zenburn
     css: styles.css
     toc: FALSE
