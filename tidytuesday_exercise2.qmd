@@ -30,11 +30,22 @@ cagefreepercentages <- readr::read_csv('https://raw.githubusercontent.com/rforda
 glimpse(cagefreepercentages)
 glimpse(eggproduction)
 ```
+
+
+```{r}
+#lets take a look at number of eggd produced over time sorted by production type
+egg_plot <- eggproduction %>% ggplot(aes(observed_month, n_eggs)) +
+  geom_point(aes(color = prod_type)) +
+  labs(title = "Number of eggs over time", x = "Date", y = "Number of eggs")
+egg_plot
+```
+
+
 Main question:
 
-Does type of production affect number of eggs produced?
+Is type of production the best predictor of number of eggs produced?
 Outcome: number of eggs
-Predictors: number of hens, production process
+Predictors: all
 Let's make a new dataset with only the variables I need.
 
 ```{r}
@@ -44,12 +55,6 @@ clean_egg <- eggproduction %>%
 ```
 
 ```{r}
-
-clean_egg$prod_process <- as.factor(clean_egg$prod_process)
-clean_egg$prod_type <- as.factor(clean_egg$prod_type)
-
-clean_egg$prod_process <- factor(clean_egg$prod_process, levels = c("cage-free (non-organic)", "cage-free (organic)", "all"), ordered = TRUE)
-clean_egg$prod_type <- factor(clean_egg$prod_type, levels = c("hatching eggs", "table eggs"), ordered=TRUE)
 #set seed
 set.seed(123)
 
@@ -70,8 +75,7 @@ Make a recipe for use in all models
 ```{r}
 #create recipe
 egg_rec <- recipe(n_eggs ~ ., data = clean_egg) %>%
-  step_dummy(prod_type) %>%
-  step_ordinalscore(prod_process) 
+  step_dummy(all_nominal_predictors())
 
 ```
 
@@ -119,7 +123,7 @@ Model Tuning and Fitting
 
 Tree
 
-## Model Specification
+Model Specification
 ```{r}
 tune_spec <- decision_tree(cost_complexity = tune(),
                            tree_depth = tune()) %>%
@@ -129,14 +133,14 @@ tune_spec
 
 ```
 
-## Workflow Definition
+Workflow Definition
 ```{r}
 tree_wf <- workflow() %>%
   add_model(tune_spec) %>%
   add_recipe(egg_rec)
 ```
 
-## Tuning Grid Specification
+Tuning Grid Specification
 ```{r}
 tree_grid <- grid_regular(cost_complexity(),
                           tree_depth(),
@@ -146,7 +150,7 @@ tree_grid %>%
   count(tree_depth)
 ```
 
-## Tuning using Cross-Validation and Tune_grid()
+Tuning using Cross-Validation and Tune_grid()
 ```{r}
 tree_res <- tree_wf %>%
   tune_grid(
@@ -192,7 +196,8 @@ Lasso
 Model Specification
 ```{r}
 lr_mod <- linear_reg(penalty = tune(), mixture = 1) %>%
-  set_engine("glmnet")
+  set_engine("glmnet") %>%
+  set_mode("regression")
 ```
 
 Workflow Definition
@@ -214,8 +219,7 @@ Tuning using cross-validation and the tune_grid() function
 lr_res <- lr_workflow %>%
   tune_grid(resamples = folds_train,
             grid = lr_reg_grid,
-            control = control_grid(verbose = FALSE, save_pred = TRUE),
-            metrics = metric_set(rmse))
+            control = control_grid(save_pred = TRUE))
 
 lr_res %>% collect_metrics()
 ```
@@ -324,44 +328,44 @@ p_workflow <- workflow() %>%
 ```
 
 ```{r}
-p_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
-p_reg_grid %>% top_n(-5)
-p_reg_grid %>% top_n(5)
+pois_reg_grid <- tibble(penalty = 10^seq(-4, -1, length.out = 30))
+pois_reg_grid %>% top_n(-5)
+pois_reg_grid %>% top_n(5)
 ```
 
 ```{r}
-p_res <- p_workflow %>%
+pois_res <- p_workflow %>%
   tune_grid(resamples = folds_train,
-            grid = p_reg_grid,
+            grid = pois_reg_grid,
             control = control_grid(verbose = FALSE, save_pred = TRUE),
             metrics = metric_set(rmse))
-p_res %>%
+pois_res %>%
   collect_metrics()
 ```
 
 ```{r}
-p_res %>%
+pois_res %>%
   autoplot()
 ```
 
 ```{r}
-p_res %>%
+pois_res %>%
   show_best(metric = "rmse")
-best_p <- p_res %>%
+best_pois <- pois_res %>%
   select_best(metric = "rmse")
-best_p
+best_pois
 ```
 
 ```{r}
-final_p_workflow <- p_workflow %>%
-  finalize_workflow(best_p)
-final_p_fit <- final_p_workflow %>%
+final_pois_workflow <- p_workflow %>%
+  finalize_workflow(best_pois)
+final_pois_fit <- final_pois_workflow %>%
   fit(data = egg_train)
-final_p_fit
+final_pois_fit
 ```
 
 ```{r}
-y <- final_p_fit$fit$fit$fit
+y <- final_pois_fit$fit$fit$fit
 plot(y, "lambda")
 ```
 ```{r}
@@ -372,7 +376,7 @@ lr_res %>%
   show_best(metric = "rmse", n=1)
 rf_res %>%
   show_best(metric = "rmse", n=1)
-p_res %>%
+pois_res %>%
   show_best(metric = "rmse", n=1)
 null_train_fit %>% 
   collect_metrics(metric = "rmse")
@@ -394,4 +398,4 @@ The last fit of LASSO with the testing has an even smaller RMSE than the best fi
 
 Summary
 
-After importing the data and creating a recipe, I made a null model for comparison to the other models. I used regressions models so I could compare the RMSE of each. In my observations from this and previous assignments, the LASSO model seems to always perform better than the others in most situations.
+After importing the data and creating a recipe, I made a null model for comparison to the other models. I used regressions models so I could compare the RMSE of each. In my observations from this and previous assignments, the LASSO model seems to always perform better than the others in most situations. It seems that production type is not the best predictor of number of eggs produced and rather that number of hens is, which makes sense but really wasn't the outcome i was hoping for. I had some trouble fitting models as I feel I still really haven't wrapped my head around machine learning and am still in the "plug-and-chug" phase. I hope to practice more over the summer and get better!
